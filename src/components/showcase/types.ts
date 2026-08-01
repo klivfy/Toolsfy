@@ -19,6 +19,8 @@ export type AppItem = {
   native: boolean;
   compatibility: Compatibility[];
   href: string;
+  /** Credits charged when a native tool is accessed. Unused for external apps. */
+  credits: number;
 };
 
 export type StoreLink = {

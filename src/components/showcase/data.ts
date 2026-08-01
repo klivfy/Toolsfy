@@ -10,6 +10,7 @@ export const APPS: AppItem[] = [
     native: true,
     compatibility: ["web"],
     href: "/dashboard/ferramentas/gerador-documentos",
+    credits: 12,
   },
   {
     id: "editor-imagens",
@@ -20,6 +21,7 @@ export const APPS: AppItem[] = [
     native: true,
     compatibility: ["web"],
     href: "/dashboard/ferramentas/editor-imagens",
+    credits: 8,
   },
   {
     id: "assistente-texto",
@@ -30,6 +32,7 @@ export const APPS: AppItem[] = [
     native: true,
     compatibility: ["web"],
     href: "/dashboard/ferramentas/assistente-texto",
+    credits: 5,
   },
   {
     id: "automacoes",
@@ -40,6 +43,7 @@ export const APPS: AppItem[] = [
     native: true,
     compatibility: ["web"],
     href: "/dashboard/ferramentas/automacoes",
+    credits: 20,
   },
   {
     id: "toolsfy-navegadores",
@@ -50,6 +54,7 @@ export const APPS: AppItem[] = [
     native: false,
     compatibility: ["chrome", "edge", "firefox"],
     href: "#",
+    credits: 0,
   },
   {
     id: "toolsfy-mobile",
@@ -60,6 +65,7 @@ export const APPS: AppItem[] = [
     native: false,
     compatibility: ["android"],
     href: "#",
+    credits: 0,
   },
   {
     id: "toolsfy-desktop",
@@ -70,6 +76,7 @@ export const APPS: AppItem[] = [
     native: false,
     compatibility: ["windows"],
     href: "#",
+    credits: 0,
   },
 ];
 

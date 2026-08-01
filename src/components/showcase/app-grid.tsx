@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ExternalLink, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ICONS } from "@/components/icons";
+import { recordToolUsage } from "@/lib/supabase/tool-usage-actions";
 import { type AppCategory, type AppItem } from "./types";
 import { CompatibilityDots } from "./compatibility-dots";
 
@@ -117,6 +118,11 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
                   {app.native ? (
                     <Link
                       href={app.href}
+                      onClick={() => {
+                        recordToolUsage(app.id, app.name, app.credits).catch(
+                          () => {},
+                        );
+                      }}
                       className="inline-flex items-center rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2"
                     >
                       Acessar
