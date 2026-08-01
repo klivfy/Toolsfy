@@ -8,6 +8,7 @@ import {
   Wrench,
   History,
   CreditCard,
+  Settings,
   LogOut,
 } from "lucide-react";
 
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/tools", label: "Ferramentas", icon: Wrench },
   { href: "/dashboard/history", label: "Histórico", icon: History },
   { href: "/dashboard/billing", label: "Assinatura", icon: CreditCard },
+  { href: "/dashboard/settings", label: "Configurações", icon: Settings },
 ];
 
 export default async function DashboardLayout({
