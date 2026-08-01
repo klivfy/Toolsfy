@@ -74,9 +74,7 @@ export default async function BillingPage() {
           </div>
 
           {isPremium
-            ? subscription?.stripe_customer_id && (
-                <PortalButton customerId={subscription.stripe_customer_id} />
-              )
+            ? subscription?.stripe_customer_id && <PortalButton />
             : priceId && <CheckoutButton priceId={priceId} />}
         </div>
       </Card>
@@ -131,11 +129,7 @@ export default async function BillingPage() {
                 <div className="mt-5">
                   {plan.key === "premium" ? (
                     isPremium ? (
-                      subscription?.stripe_customer_id && (
-                        <PortalButton
-                          customerId={subscription.stripe_customer_id}
-                        />
-                      )
+                      subscription?.stripe_customer_id && <PortalButton />
                     ) : (
                       priceId && <CheckoutButton priceId={priceId} />
                     )

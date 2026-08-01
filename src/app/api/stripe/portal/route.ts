@@ -12,16 +12,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { customerId } = await request.json();
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("stripe_customer_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  if (!customerId) {
-    return NextResponse.json({ error: "Missing customerId" }, { status: 400 });
+  if (!subscription?.stripe_customer_id) {
+    return NextResponse.json({ error: "No Stripe customer found" }, { status: 404 });
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? request.headers.get("origin")!;
 
   const session = await getStripe().billingPortal.sessions.create({
-    customer: customerId,
+    customer: subscription.stripe_customer_id,
     return_url: `${siteUrl}/dashboard/billing`,
   });
 
