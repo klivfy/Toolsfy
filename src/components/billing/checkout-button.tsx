@@ -27,9 +27,9 @@ export function CheckoutButton({ priceId }: { priceId: string }) {
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+      className="inline-flex items-center rounded-lg bg-zinc-950 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
     >
-      {loading ? "Redirecting…" : "Upgrade plan"}
+      {loading ? "Redirecionando…" : "Fazer upgrade"}
     </button>
   );
 }
