@@ -2,12 +2,19 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/supabase/actions";
 import Link from "next/link";
+import {
+  LayoutGrid,
+  Wrench,
+  History,
+  CreditCard,
+  LogOut,
+} from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/tools", label: "Tools" },
-  { href: "/dashboard/billing", label: "Billing" },
-  { href: "/dashboard/settings", label: "Settings" },
+  { href: "/dashboard", label: "Início", icon: LayoutGrid },
+  { href: "/dashboard/tools", label: "Ferramentas", icon: Wrench },
+  { href: "/dashboard/history", label: "Histórico", icon: History },
+  { href: "/dashboard/billing", label: "Assinatura", icon: CreditCard },
 ];
 
 export default async function DashboardLayout({
@@ -27,38 +34,76 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <aside className="hidden w-60 shrink-0 border-r border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900 sm:flex sm:flex-col">
-        <span className="mb-8 px-2 text-lg font-semibold tracking-tight">
-          Toolsfy
-        </span>
-        <nav className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-md px-2 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
+    <div className="flex min-h-screen bg-zinc-50 dark:bg-neutral-950">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 sm:flex">
+        <div className="flex h-16 items-center border-b border-zinc-100 px-6 dark:border-neutral-800">
+          <span className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white">
+            Toolsfy
+          </span>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-0.5 p-4">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+              >
+                <Icon className="h-4 w-4" strokeWidth={1.75} />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="w-full rounded-md px-2 py-2 text-left text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
-          >
-            Sign out
-          </button>
-        </form>
+
+        <div className="border-t border-zinc-100 p-4 dark:border-neutral-800">
+          <div className="mb-3 flex items-center gap-3 px-1">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-neutral-800 dark:text-neutral-300">
+              {user.email?.[0]?.toUpperCase() ?? "U"}
+            </div>
+            <span className="truncate text-sm text-zinc-600 dark:text-neutral-300">
+              {user.email}
+            </span>
+          </div>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.75} />
+              Sair
+            </button>
+          </form>
+        </div>
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-6">
-          <span className="text-sm font-medium sm:hidden">Toolsfy</span>
-          <div className="ml-auto text-sm text-neutral-500">{user.email}</div>
+        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
+          <span className="text-sm font-medium text-zinc-900 dark:text-white sm:hidden">
+            Toolsfy
+          </span>
+          <span className="hidden text-sm font-medium text-zinc-500 dark:text-neutral-400 sm:block">
+            Painel de Controle
+          </span>
+
+          <div className="ml-auto flex items-center gap-4">
+            <span className="hidden items-center gap-1.5 text-xs text-zinc-500 dark:text-neutral-400 sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              API operacional
+            </span>
+            <form action={signOut} className="sm:hidden">
+              <button
+                type="submit"
+                className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-neutral-400 dark:hover:text-white"
+              >
+                Sair
+              </button>
+            </form>
+          </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-8">{children}</main>
       </div>
     </div>
   );
