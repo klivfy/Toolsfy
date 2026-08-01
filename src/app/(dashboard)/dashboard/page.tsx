@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getGreeting } from "@/lib/user-display";
+import { formatRelativeTime } from "@/lib/format-time";
+import { resolveToolIcon, type ToolUsageRow } from "@/lib/tool-usage";
+import { CreditsUsageBar } from "@/components/dashboard/credits-usage-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ICONS } from "@/components/icons";
 import {
   FileText,
   ImageIcon,
@@ -34,14 +38,8 @@ const QUICK_TOOLS = [
   },
 ];
 
-const RECENT_HISTORY = [
-  { tool: "Gerador de Documentos", date: "Hoje, 09:12" },
-  { tool: "Editor de Imagens", date: "Ontem, 17:40" },
-  { tool: "Assistente de Texto", date: "Ontem, 11:05" },
-];
-
-const CREDITS_USED = 320;
-const CREDITS_LIMIT = 1000;
+const CREDITS_LIMIT_FREE = 100;
+const CREDITS_LIMIT_PREMIUM = 1000;
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -56,6 +54,33 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   const isPremium = subscription?.status === "active";
+  const creditsLimit = isPremium ? CREDITS_LIMIT_PREMIUM : CREDITS_LIMIT_FREE;
+
+  const { data: recentUsage } = await supabase
+    .from("tool_usage")
+    .select("id, tool_id, tool_name, credits, status, created_at")
+    .eq("user_id", user!.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const recentHistory = (recentUsage ?? []) as ToolUsageRow[];
+
+  const startOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1,
+  ).toISOString();
+  const { data: monthlyUsage } = await supabase
+    .from("tool_usage")
+    .select("credits")
+    .eq("user_id", user!.id)
+    .gte("created_at", startOfMonth);
+
+  const creditsUsed = (monthlyUsage ?? []).reduce(
+    (total, row) => total + (row.credits ?? 0),
+    0,
+  );
+
   const displayName = user?.email?.split("@")[0] ?? "Usuário";
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -63,7 +88,7 @@ export default async function DashboardPage() {
     month: "long",
     year: "numeric",
   });
-  const usagePercent = Math.round((CREDITS_USED / CREDITS_LIMIT) * 100);
+  const usagePercent = Math.round((creditsUsed / creditsLimit) * 100);
   const greeting = getGreeting();
 
   return (
@@ -118,21 +143,28 @@ export default async function DashboardPage() {
           <h2 className="text-sm font-medium text-zinc-500 dark:text-neutral-400">
             Histórico recente
           </h2>
-          {RECENT_HISTORY.length > 0 ? (
+          {recentHistory.length > 0 ? (
             <ul className="mt-4 divide-y divide-zinc-100 dark:divide-neutral-800">
-              {RECENT_HISTORY.map((item) => (
-                <li
-                  key={`${item.tool}-${item.date}`}
-                  className="flex items-center justify-between py-3 text-sm first:pt-0 last:pb-0"
-                >
-                  <span className="text-zinc-700 dark:text-neutral-300">
-                    {item.tool}
-                  </span>
-                  <span className="text-xs text-zinc-400 dark:text-neutral-500">
-                    {item.date}
-                  </span>
-                </li>
-              ))}
+              {recentHistory.map((item) => {
+                const Icon = ICONS[resolveToolIcon(item.tool_id)];
+                return (
+                  <li
+                    key={item.id}
+                    className="flex items-center gap-3 py-3 text-sm first:pt-0 last:pb-0"
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0 text-zinc-400 dark:text-neutral-500"
+                      strokeWidth={1.75}
+                    />
+                    <span className="flex-1 truncate text-zinc-700 dark:text-neutral-300">
+                      {item.tool_name}
+                    </span>
+                    <span className="shrink-0 text-xs text-zinc-400 dark:text-neutral-500">
+                      {formatRelativeTime(item.created_at)}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <div className="mt-4 flex flex-col items-center gap-2 py-8 text-center">
@@ -153,23 +185,26 @@ export default async function DashboardPage() {
           <h2 className="text-sm font-medium text-zinc-500 dark:text-neutral-400">
             Uso de créditos
           </h2>
-          {CREDITS_USED > 0 ? (
+          {creditsUsed > 0 ? (
             <div className="mt-4">
               <div className="flex items-baseline justify-between">
                 <span className="text-2xl font-semibold text-zinc-950 dark:text-white">
-                  {CREDITS_USED}
+                  {creditsUsed}
                 </span>
                 <span className="text-xs text-zinc-400 dark:text-neutral-500">
-                  de {CREDITS_LIMIT} créditos
+                  de {creditsLimit} créditos
                 </span>
               </div>
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-neutral-800">
-                <div
-                  className="h-full rounded-full bg-zinc-900 dark:bg-white"
-                  style={{ width: `${usagePercent}%` }}
-                />
+              <div className="mt-3">
+                <CreditsUsageBar percent={usagePercent} />
               </div>
-              <p className="mt-2 text-xs text-zinc-400 dark:text-neutral-500">
+              <p
+                className={`mt-2 text-xs ${
+                  usagePercent >= 90
+                    ? "font-medium text-amber-600"
+                    : "text-zinc-400 dark:text-neutral-500"
+                }`}
+              >
                 {usagePercent}% do limite mensal utilizado
               </p>
             </div>

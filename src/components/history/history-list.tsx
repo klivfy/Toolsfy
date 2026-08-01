@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ICONS } from "@/components/icons";
+import { formatRelativeTime } from "@/lib/format-time";
 import { type HistoryEntry, type HistoryStatus } from "./types";
 
 const FILTERS: { key: HistoryStatus | "all"; label: string }[] = [
@@ -66,7 +67,9 @@ export function HistoryList({ entries }: { entries: HistoryEntry[] }) {
                     <p className="truncate text-sm font-medium text-zinc-950">
                       {entry.toolName}
                     </p>
-                    <p className="text-xs text-zinc-400">{entry.timestamp}</p>
+                    <p className="text-xs text-zinc-400">
+                      {formatRelativeTime(entry.timestamp)}
+                    </p>
                   </div>
 
                   <span className="hidden text-xs text-zinc-500 sm:block">
