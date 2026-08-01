@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     success_url: `${siteUrl}/dashboard/billing/success`,
     cancel_url: `${siteUrl}/dashboard/billing?checkout=cancelled`,
     metadata: { supabase_user_id: user.id },
+    subscription_data: { metadata: { supabase_user_id: user.id } },
   });
 
   return NextResponse.json({ url: session.url });

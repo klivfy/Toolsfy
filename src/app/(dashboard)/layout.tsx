@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/supabase/actions";
 import { getUserInitials } from "@/lib/user-display";
 import { Footer } from "@/components/footer";
+import { SubscriptionWatcher } from "@/components/billing/subscription-watcher";
 import Link from "next/link";
 import {
   LayoutGrid,
@@ -41,6 +42,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-neutral-950">
+      <SubscriptionWatcher userId={user.id} />
       <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 sm:flex">
         <div className="flex h-16 items-center border-b border-zinc-100 px-6 dark:border-neutral-800">
           <span className="text-base font-semibold tracking-tight text-zinc-950 dark:text-white">
