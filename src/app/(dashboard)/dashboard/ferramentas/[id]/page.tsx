@@ -7,6 +7,7 @@ import { ICONS } from "@/components/icons";
 import { APPS } from "@/components/showcase/data";
 import { CompatibilityDots } from "@/components/showcase/compatibility-dots";
 import { CopyLinkButton } from "@/components/showcase/copy-link-button";
+import { DocumentGeneratorForm } from "@/components/tools/document-generator-form";
 
 export function generateStaticParams() {
   return APPS.filter((app) => app.native).map((app) => ({ id: app.id }));
@@ -61,16 +62,20 @@ export default async function ToolPage({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="p-8 lg:col-span-2">
-          <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-zinc-200 text-center">
-            <Icon className="h-8 w-8 text-zinc-300" strokeWidth={1.5} />
-            <p className="text-sm font-medium text-zinc-950">
-              A interface de {app.name} carrega aqui
-            </p>
-            <p className="max-w-xs text-xs text-zinc-500">
-              Esta área concentra o conteúdo funcional da ferramenta,
-              priorizando a experiência nativa da plataforma Toolsfy.
-            </p>
-          </div>
+          {app.id === "gerador-documentos" ? (
+            <DocumentGeneratorForm />
+          ) : (
+            <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-zinc-200 text-center">
+              <Icon className="h-8 w-8 text-zinc-300" strokeWidth={1.5} />
+              <p className="text-sm font-medium text-zinc-950">
+                A interface de {app.name} carrega aqui
+              </p>
+              <p className="max-w-xs text-xs text-zinc-500">
+                Esta área concentra o conteúdo funcional da ferramenta,
+                priorizando a experiência nativa da plataforma Toolsfy.
+              </p>
+            </div>
+          )}
         </Card>
 
         <Card className="p-6">
