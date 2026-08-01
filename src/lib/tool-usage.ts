@@ -10,6 +10,13 @@ export type ToolUsageRow = {
   created_at: string;
 };
 
+export const CREDITS_LIMIT_FREE = 100;
+export const CREDITS_LIMIT_PREMIUM = 1000;
+
+export function getCreditsLimit(isPremium: boolean) {
+  return isPremium ? CREDITS_LIMIT_PREMIUM : CREDITS_LIMIT_FREE;
+}
+
 export function resolveToolIcon(toolId: string): IconKey {
   return APPS.find((app) => app.id === toolId)?.icon ?? "sparkles";
 }

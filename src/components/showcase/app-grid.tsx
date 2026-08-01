@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ExternalLink, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Loader2, ExternalLink, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ICONS } from "@/components/icons";
-import { recordToolUsage } from "@/lib/supabase/tool-usage-actions";
+import { useToast } from "@/components/toast/toast-provider";
 import { type AppCategory, type AppItem } from "./types";
 import { CompatibilityDots } from "./compatibility-dots";
 
@@ -21,8 +21,32 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
     "all",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const router = useRouter();
+  const showToast = useToast();
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  async function handleAccess(app: AppItem) {
+    setPendingId(app.id);
+    try {
+      const res = await fetch(`/api/tools/${app.id}/execute`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error ?? "Não foi possível acessar a ferramenta", "error");
+        return;
+      }
+
+      router.push(app.href);
+    } catch {
+      showToast("Falha de conexão ao acessar a ferramenta", "error");
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   const filteredApps = apps
     .filter((app) => activeCategory === "all" || app.category === activeCategory)
@@ -116,17 +140,17 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
 
                 <div className="mt-5">
                   {app.native ? (
-                    <Link
-                      href={app.href}
-                      onClick={() => {
-                        recordToolUsage(app.id, app.name, app.credits).catch(
-                          () => {},
-                        );
-                      }}
-                      className="inline-flex items-center rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2"
+                    <button
+                      type="button"
+                      onClick={() => handleAccess(app)}
+                      disabled={pendingId === app.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2"
                     >
-                      Acessar
-                    </Link>
+                      {pendingId === app.id && (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                      )}
+                      {pendingId === app.id ? "Processando..." : "Acessar"}
+                    </button>
                   ) : (
                     <a
                       href={app.href}

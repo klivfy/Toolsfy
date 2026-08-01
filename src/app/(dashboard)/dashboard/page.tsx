@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getGreeting } from "@/lib/user-display";
 import { formatRelativeTime } from "@/lib/format-time";
-import { resolveToolIcon, type ToolUsageRow } from "@/lib/tool-usage";
+import { resolveToolIcon, getCreditsLimit, type ToolUsageRow } from "@/lib/tool-usage";
 import { CreditsUsageBar } from "@/components/dashboard/credits-usage-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,9 +38,6 @@ const QUICK_TOOLS = [
   },
 ];
 
-const CREDITS_LIMIT_FREE = 100;
-const CREDITS_LIMIT_PREMIUM = 1000;
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -54,7 +51,7 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   const isPremium = subscription?.status === "active";
-  const creditsLimit = isPremium ? CREDITS_LIMIT_PREMIUM : CREDITS_LIMIT_FREE;
+  const creditsLimit = getCreditsLimit(isPremium);
 
   const { data: recentUsage } = await supabase
     .from("tool_usage")
