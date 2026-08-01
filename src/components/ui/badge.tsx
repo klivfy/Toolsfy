@@ -5,7 +5,7 @@ export function Badge({
   tone = "neutral",
 }: {
   children: ReactNode;
-  tone?: "neutral" | "premium" | "success";
+  tone?: "neutral" | "premium" | "success" | "error";
 }) {
   const toneClasses = {
     neutral:
@@ -13,6 +13,7 @@ export function Badge({
     premium:
       "bg-zinc-900 text-white dark:bg-white dark:text-neutral-900",
     success: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
+    error: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
   } as const;
 
   return (

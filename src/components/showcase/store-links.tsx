@@ -1,4 +1,4 @@
-import { ICONS } from "./icons";
+import { ICONS } from "@/components/icons";
 import { type StoreLink } from "./types";
 
 export function StoreLinks({ stores }: { stores: StoreLink[] }) {

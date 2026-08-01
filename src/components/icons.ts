@@ -10,6 +10,8 @@ import {
   CirclePlay,
   Flame,
   Compass,
+  CircleCheck,
+  CircleX,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +27,8 @@ export const ICONS = {
   play: CirclePlay,
   flame: Flame,
   compass: Compass,
+  "circle-check": CircleCheck,
+  "circle-x": CircleX,
 } satisfies Record<string, LucideIcon>;
 
 export type IconKey = keyof typeof ICONS;

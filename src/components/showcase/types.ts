@@ -1,4 +1,4 @@
-import { type IconKey } from "./icons";
+import { type IconKey } from "@/components/icons";
 
 export type AppCategory = "web" | "extension" | "mobile-desktop";
 

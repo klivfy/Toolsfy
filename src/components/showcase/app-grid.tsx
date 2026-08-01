@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Globe } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ICONS } from "./icons";
+import { ICONS } from "@/components/icons";
 import { type AppCategory, type AppItem, type Compatibility } from "./types";
 
 const CATEGORIES: { key: AppCategory | "all"; label: string }[] = [

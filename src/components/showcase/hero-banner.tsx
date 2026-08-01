@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ICONS } from "./icons";
+import { ICONS } from "@/components/icons";
 import { type AppItem } from "./types";
 
 export function HeroBanner({ app }: { app: AppItem }) {
