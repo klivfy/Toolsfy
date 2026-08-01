@@ -10,7 +10,13 @@ export function HeroBanner({ app }: { app: AppItem }) {
       <div className="grid grid-cols-1 md:grid-cols-2">
         <div className="flex items-center justify-center bg-zinc-50 p-10 md:p-14">
           <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-zinc-200 bg-white">
-            <Icon className="h-12 w-12 text-zinc-900" strokeWidth={1.5} />
+            <Icon
+              className="h-12 w-12 text-zinc-900"
+              width={48}
+              height={48}
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
           </div>
         </div>
 
