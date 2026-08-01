@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Globe, Search } from "lucide-react";
+import { ExternalLink, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ICONS } from "@/components/icons";
-import { type AppCategory, type AppItem, type Compatibility } from "./types";
+import { type AppCategory, type AppItem } from "./types";
+import { CompatibilityDots } from "./compatibility-dots";
 
 const CATEGORIES: { key: AppCategory | "all"; label: string }[] = [
   { key: "all", label: "Todas" },
@@ -13,35 +14,6 @@ const CATEGORIES: { key: AppCategory | "all"; label: string }[] = [
   { key: "extension", label: "Extensões" },
   { key: "mobile-desktop", label: "Mobile & Desktop" },
 ];
-
-const COMPAT_LABEL: Record<Compatibility, string> = {
-  web: "Web",
-  chrome: "Chrome",
-  edge: "Edge",
-  firefox: "Firefox",
-  android: "Android",
-  windows: "Windows",
-};
-
-function CompatibilityDots({ items }: { items: Compatibility[] }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {items.map((item) => (
-        <span
-          key={item}
-          title={COMPAT_LABEL[item]}
-          className="flex h-5 w-5 items-center justify-center rounded-full border border-zinc-200 text-[9px] font-medium uppercase text-zinc-500"
-        >
-          {item === "web" ? (
-            <Globe className="h-3 w-3" strokeWidth={1.75} />
-          ) : (
-            COMPAT_LABEL[item][0]
-          )}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 export function AppGrid({ apps }: { apps: AppItem[] }) {
   const [activeCategory, setActiveCategory] = useState<AppCategory | "all">(
@@ -145,7 +117,7 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
                   {app.native ? (
                     <Link
                       href={app.href}
-                      className="inline-flex items-center rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800"
+                      className="inline-flex items-center rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2"
                     >
                       Acessar
                     </Link>
@@ -154,7 +126,7 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
                       href={app.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3.5 py-2 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3.5 py-2 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2"
                     >
                       Abrir
                       <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
