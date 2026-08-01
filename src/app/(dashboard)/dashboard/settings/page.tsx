@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUserInitials } from "@/lib/user-display";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { updateProfile, updatePassword } from "@/lib/supabase/settings-actions";
@@ -25,7 +26,7 @@ export default async function SettingsPage({
 
   const isPremium = subscription?.status === "active";
   const fullName = (user?.user_metadata?.full_name as string | undefined) ?? "";
-  const initials = (fullName || user?.email || "U")[0]!.toUpperCase();
+  const initials = getUserInitials(user);
 
   return (
     <div className="space-y-8">

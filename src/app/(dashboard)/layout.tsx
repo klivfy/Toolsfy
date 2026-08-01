@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/supabase/actions";
+import { getUserInitials } from "@/lib/user-display";
 import { Footer } from "@/components/footer";
 import Link from "next/link";
 import {
@@ -36,6 +37,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const initials = getUserInitials(user);
+
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-neutral-950">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 sm:flex">
@@ -64,7 +67,7 @@ export default async function DashboardLayout({
         <div className="border-t border-zinc-100 p-4 dark:border-neutral-800">
           <div className="mb-3 flex items-center gap-3 px-1">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-neutral-800 dark:text-neutral-300">
-              {user.email?.[0]?.toUpperCase() ?? "U"}
+              {initials}
             </div>
             <span className="truncate text-sm text-zinc-600 dark:text-neutral-300">
               {user.email}

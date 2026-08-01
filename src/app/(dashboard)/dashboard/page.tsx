@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getGreeting } from "@/lib/user-display";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -63,13 +64,14 @@ export default async function DashboardPage() {
     year: "numeric",
   });
   const usagePercent = Math.round((CREDITS_USED / CREDITS_LIMIT) * 100);
+  const greeting = getGreeting();
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-zinc-950 dark:text-white">
-            Olá, {displayName}. Bem-vindo ao Toolsfy.
+            {greeting}, {displayName}. Bem-vindo ao Toolsfy.
           </h1>
           <p className="mt-1 text-sm capitalize text-zinc-500 dark:text-neutral-400">
             {today}
@@ -101,7 +103,7 @@ export default async function DashboardPage() {
                 <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-neutral-400">
                   {tool.description}
                 </p>
-                <button className="mt-4 flex items-center gap-1 text-xs font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-neutral-400 dark:hover:text-white">
+                <button className="mt-4 flex items-center gap-1 rounded-lg text-xs font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-neutral-400 dark:hover:text-white">
                   Abrir
                   <ArrowUpRight className="h-3 w-3" strokeWidth={2} />
                 </button>
