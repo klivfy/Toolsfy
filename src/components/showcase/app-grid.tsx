@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, ExternalLink, Search } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Lock, ExternalLink, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ICONS } from "@/components/icons";
 import { useToast } from "@/components/toast/toast-provider";
@@ -16,7 +17,13 @@ const CATEGORIES: { key: AppCategory | "all"; label: string }[] = [
   { key: "mobile-desktop", label: "Mobile & Desktop" },
 ];
 
-export function AppGrid({ apps }: { apps: AppItem[] }) {
+export function AppGrid({
+  apps,
+  isPremium = false,
+}: {
+  apps: AppItem[];
+  isPremium?: boolean;
+}) {
   const [activeCategory, setActiveCategory] = useState<AppCategory | "all">(
     "all",
   );
@@ -139,7 +146,15 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
                 </div>
 
                 <div className="mt-5">
-                  {app.native ? (
+                  {app.premiumOnly && !isPremium ? (
+                    <Link
+                      href="/dashboard/billing"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3.5 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-300 hover:text-zinc-600"
+                    >
+                      <Lock className="h-3 w-3" strokeWidth={1.75} />
+                      Exclusivo Premium
+                    </Link>
+                  ) : app.native ? (
                     <button
                       type="button"
                       onClick={() => handleAccess(app)}

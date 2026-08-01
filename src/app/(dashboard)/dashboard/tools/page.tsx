@@ -1,10 +1,22 @@
+import { createClient } from "@/lib/supabase/server";
 import { HeroBanner } from "@/components/showcase/hero-banner";
 import { AppGrid } from "@/components/showcase/app-grid";
 import { StoreLinks } from "@/components/showcase/store-links";
 import { APPS, STORES } from "@/components/showcase/data";
 
-export default function ToolsPage() {
+export default async function ToolsPage() {
   const featuredApp = APPS[0];
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", user!.id)
+    .maybeSingle();
+  const isPremium = subscription?.status === "active";
 
   return (
     <div className="space-y-10">
@@ -19,7 +31,7 @@ export default function ToolsPage() {
       </div>
 
       <HeroBanner app={featuredApp} />
-      <AppGrid apps={APPS} />
+      <AppGrid apps={APPS} isPremium={isPremium} />
       <StoreLinks stores={STORES} />
     </div>
   );

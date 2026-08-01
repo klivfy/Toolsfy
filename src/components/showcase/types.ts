@@ -21,6 +21,8 @@ export type AppItem = {
   href: string;
   /** Credits charged when a native tool is accessed. Unused for external apps. */
   credits: number;
+  /** When true, only Premium accounts can access this tool. */
+  premiumOnly?: boolean;
 };
 
 export type StoreLink = {

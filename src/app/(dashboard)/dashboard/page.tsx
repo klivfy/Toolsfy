@@ -4,6 +4,7 @@ import { getGreeting } from "@/lib/user-display";
 import { formatRelativeTime } from "@/lib/format-time";
 import { resolveToolIcon, getCreditsLimit, type ToolUsageRow } from "@/lib/tool-usage";
 import { CreditsUsageBar } from "@/components/dashboard/credits-usage-bar";
+import { TopToolsChart } from "@/components/dashboard/top-tools-chart";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ICONS } from "@/components/icons";
@@ -77,6 +78,24 @@ export default async function DashboardPage() {
     (total, row) => total + (row.credits ?? 0),
     0,
   );
+
+  const thirtyDaysAgo = new Date(
+    Date.now() - 30 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const { data: last30DaysUsage } = await supabase
+    .from("tool_usage")
+    .select("tool_name")
+    .eq("user_id", user!.id)
+    .eq("status", "success")
+    .gte("created_at", thirtyDaysAgo);
+
+  const toolCounts = new Map<string, number>();
+  for (const row of last30DaysUsage ?? []) {
+    toolCounts.set(row.tool_name, (toolCounts.get(row.tool_name) ?? 0) + 1);
+  }
+  const topToolsData = Array.from(toolCounts, ([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
 
   const displayName = user?.email?.split("@")[0] ?? "Usuário";
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -214,6 +233,23 @@ export default async function DashboardPage() {
           )}
         </Card>
       </section>
+
+      <Card className="p-5">
+        <h2 className="text-sm font-medium text-zinc-500 dark:text-neutral-400">
+          Ferramentas mais usadas (30 dias)
+        </h2>
+        {topToolsData.length > 0 ? (
+          <div className="mt-4">
+            <TopToolsChart data={topToolsData} />
+          </div>
+        ) : (
+          <div className="mt-4 flex flex-col items-center gap-2 py-8 text-center">
+            <p className="text-xs text-zinc-500 dark:text-neutral-400">
+              Sem execuções nos últimos 30 dias para exibir no gráfico.
+            </p>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
