@@ -42,7 +42,7 @@ export default async function SignupPage({
             id="password"
             name="password"
             type="password"
-            minLength={6}
+            minLength={8}
             required
             className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
           />
