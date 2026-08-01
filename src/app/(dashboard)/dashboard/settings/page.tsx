@@ -3,6 +3,7 @@ import { getUserInitials } from "@/lib/user-display";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { updateProfile, updatePassword } from "@/lib/supabase/settings-actions";
+import { PortalButton } from "@/components/billing/portal-button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -20,7 +21,7 @@ export default async function SettingsPage({
 
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("status")
+    .select("status, stripe_customer_id")
     .eq("user_id", user!.id)
     .maybeSingle();
 
@@ -192,13 +193,16 @@ export default async function SettingsPage({
               </Badge>
             </div>
           </div>
-          <Link
-            href="/dashboard/billing"
-            className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 transition-colors hover:text-zinc-900"
-          >
-            Gerenciar assinatura
-            <ArrowRight className="h-3 w-3" strokeWidth={1.75} />
-          </Link>
+          <div className="flex items-center gap-4">
+            {isPremium && subscription?.stripe_customer_id && <PortalButton />}
+            <Link
+              href="/dashboard/billing"
+              className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 transition-colors hover:text-zinc-900"
+            >
+              Ver planos
+              <ArrowRight className="h-3 w-3" strokeWidth={1.75} />
+            </Link>
+          </div>
         </div>
       </Card>
 

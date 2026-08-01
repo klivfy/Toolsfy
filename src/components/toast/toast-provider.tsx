@@ -8,11 +8,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
-type Toast = { id: number; message: string };
+type ToastTone = "success" | "error";
+type Toast = { id: number; message: string; tone: ToastTone };
+type ShowToast = (message: string, tone?: ToastTone) => void;
 
-const ToastContext = createContext<((message: string) => void) | null>(null);
+const ToastContext = createContext<ShowToast | null>(null);
 
 export function useToast() {
   const showToast = useContext(ToastContext);
@@ -26,9 +28,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(0);
 
-  const showToast = useCallback((message: string) => {
+  const showToast = useCallback<ShowToast>((message, tone = "success") => {
     const id = nextId.current++;
-    setToasts((current) => [...current, { id, message }]);
+    setToasts((current) => [...current, { id, message, tone }]);
     setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id));
     }, 3000);
@@ -42,12 +44,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             role="status"
-            className="pointer-events-auto flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-xs font-medium text-zinc-950 shadow-lg transition-all dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+            className={`pointer-events-auto flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-medium shadow-lg transition-all ${
+              toast.tone === "error"
+                ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+                : "border-zinc-200 bg-white text-zinc-950 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+            }`}
           >
-            <CheckCircle2
-              className="h-3.5 w-3.5 shrink-0 text-emerald-500"
-              strokeWidth={1.75}
-            />
+            {toast.tone === "error" ? (
+              <AlertCircle
+                className="h-3.5 w-3.5 shrink-0 text-red-500"
+                strokeWidth={1.75}
+              />
+            ) : (
+              <CheckCircle2
+                className="h-3.5 w-3.5 shrink-0 text-emerald-500"
+                strokeWidth={1.75}
+              />
+            )}
             {toast.message}
           </div>
         ))}
