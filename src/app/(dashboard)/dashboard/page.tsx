@@ -67,7 +67,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">
+          <h1 className="text-xl font-semibold text-zinc-950 dark:text-white">
             Olá, {displayName}. Bem-vindo ao Toolsfy.
           </h1>
           <p className="mt-1 text-sm capitalize text-zinc-500 dark:text-neutral-400">
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
                     strokeWidth={1.75}
                   />
                 </div>
-                <h3 className="mt-4 text-sm font-medium text-zinc-900 dark:text-white">
+                <h3 className="mt-4 text-sm font-medium text-zinc-950 dark:text-white">
                   {tool.title}
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-neutral-400">
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
           </h2>
           <div className="mt-4">
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-semibold text-zinc-900 dark:text-white">
+              <span className="text-2xl font-semibold text-zinc-950 dark:text-white">
                 {CREDITS_USED}
               </span>
               <span className="text-xs text-zinc-400 dark:text-neutral-500">

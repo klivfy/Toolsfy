@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/supabase/actions";
+import { Footer } from "@/components/footer";
 import Link from "next/link";
 import {
   LayoutGrid,
@@ -37,7 +38,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen bg-zinc-50 dark:bg-neutral-950">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 sm:flex">
         <div className="flex h-16 items-center border-b border-zinc-100 px-6 dark:border-neutral-800">
-          <span className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white">
+          <span className="text-base font-semibold tracking-tight text-zinc-950 dark:text-white">
             Toolsfy
           </span>
         </div>
@@ -81,7 +82,7 @@ export default async function DashboardLayout({
 
       <div className="flex flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
-          <span className="text-sm font-medium text-zinc-900 dark:text-white sm:hidden">
+          <span className="text-sm font-medium text-zinc-950 dark:text-white sm:hidden">
             Toolsfy
           </span>
           <span className="hidden text-sm font-medium text-zinc-500 dark:text-neutral-400 sm:block">
@@ -104,6 +105,7 @@ export default async function DashboardLayout({
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-8">{children}</main>
+        <Footer />
       </div>
     </div>
   );
