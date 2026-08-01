@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -115,46 +116,68 @@ export default async function DashboardPage() {
           <h2 className="text-sm font-medium text-zinc-500 dark:text-neutral-400">
             Histórico recente
           </h2>
-          <ul className="mt-4 divide-y divide-zinc-100 dark:divide-neutral-800">
-            {RECENT_HISTORY.map((item) => (
-              <li
-                key={`${item.tool}-${item.date}`}
-                className="flex items-center justify-between py-3 text-sm first:pt-0 last:pb-0"
+          {RECENT_HISTORY.length > 0 ? (
+            <ul className="mt-4 divide-y divide-zinc-100 dark:divide-neutral-800">
+              {RECENT_HISTORY.map((item) => (
+                <li
+                  key={`${item.tool}-${item.date}`}
+                  className="flex items-center justify-between py-3 text-sm first:pt-0 last:pb-0"
+                >
+                  <span className="text-zinc-700 dark:text-neutral-300">
+                    {item.tool}
+                  </span>
+                  <span className="text-xs text-zinc-400 dark:text-neutral-500">
+                    {item.date}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-4 flex flex-col items-center gap-2 py-8 text-center">
+              <p className="text-xs text-zinc-500 dark:text-neutral-400">
+                Nenhuma ferramenta utilizada ainda.
+              </p>
+              <Link
+                href="/dashboard/tools"
+                className="text-xs font-medium text-zinc-900 underline-offset-2 hover:underline dark:text-white"
               >
-                <span className="text-zinc-700 dark:text-neutral-300">
-                  {item.tool}
-                </span>
-                <span className="text-xs text-zinc-400 dark:text-neutral-500">
-                  {item.date}
-                </span>
-              </li>
-            ))}
-          </ul>
+                Explorar ferramentas
+              </Link>
+            </div>
+          )}
         </Card>
 
         <Card className="p-5">
           <h2 className="text-sm font-medium text-zinc-500 dark:text-neutral-400">
             Uso de créditos
           </h2>
-          <div className="mt-4">
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-semibold text-zinc-950 dark:text-white">
-                {CREDITS_USED}
-              </span>
-              <span className="text-xs text-zinc-400 dark:text-neutral-500">
-                de {CREDITS_LIMIT} créditos
-              </span>
+          {CREDITS_USED > 0 ? (
+            <div className="mt-4">
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-semibold text-zinc-950 dark:text-white">
+                  {CREDITS_USED}
+                </span>
+                <span className="text-xs text-zinc-400 dark:text-neutral-500">
+                  de {CREDITS_LIMIT} créditos
+                </span>
+              </div>
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-neutral-800">
+                <div
+                  className="h-full rounded-full bg-zinc-900 dark:bg-white"
+                  style={{ width: `${usagePercent}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-zinc-400 dark:text-neutral-500">
+                {usagePercent}% do limite mensal utilizado
+              </p>
             </div>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-neutral-800">
-              <div
-                className="h-full rounded-full bg-zinc-900 dark:bg-white"
-                style={{ width: `${usagePercent}%` }}
-              />
+          ) : (
+            <div className="mt-4 flex flex-col items-center gap-2 py-8 text-center">
+              <p className="text-xs text-zinc-500 dark:text-neutral-400">
+                Nenhum crédito consumido ainda.
+              </p>
             </div>
-            <p className="mt-2 text-xs text-zinc-400 dark:text-neutral-500">
-              {usagePercent}% do limite mensal utilizado
-            </p>
-          </div>
+          )}
         </Card>
       </section>
     </div>

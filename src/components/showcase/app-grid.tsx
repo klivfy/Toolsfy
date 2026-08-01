@@ -55,7 +55,7 @@ export function AppGrid({ apps }: { apps: AppItem[] }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2 border-b border-zinc-200 pb-5">
+      <div className="-mx-1 flex flex-wrap gap-2 overflow-x-auto border-b border-zinc-200 px-1 pb-5">
         {CATEGORIES.map((category) => {
           const isActive = category.key === activeCategory;
           return (

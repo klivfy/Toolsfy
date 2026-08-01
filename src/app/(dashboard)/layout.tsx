@@ -73,7 +73,7 @@ export default async function DashboardLayout({
           <form action={signOut}>
             <button
               type="submit"
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-zinc-500 transition-colors duration-200 hover:bg-zinc-50 hover:text-zinc-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
             >
               <LogOut className="h-4 w-4" strokeWidth={1.75} />
               Sair
@@ -92,7 +92,10 @@ export default async function DashboardLayout({
           </span>
 
           <div className="ml-auto flex items-center gap-4">
-            <span className="hidden items-center gap-1.5 text-xs text-zinc-500 dark:text-neutral-400 sm:flex">
+            <span
+              title="Todos os sistemas operando normalmente"
+              className="hidden items-center gap-1.5 text-xs text-zinc-500 dark:text-neutral-400 sm:flex"
+            >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               API operacional
             </span>

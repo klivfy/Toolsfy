@@ -24,7 +24,7 @@ export function HistoryList({ entries }: { entries: HistoryEntry[] }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-1 flex flex-wrap gap-2 overflow-x-auto px-1 pb-1">
         {FILTERS.map((filter) => {
           const isActive = filter.key === activeFilter;
           return (

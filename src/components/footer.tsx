@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { type MouseEvent } from "react";
 
 const LEGAL_LINKS = [
   { href: "/privacidade", label: "Política de Privacidade" },
@@ -41,6 +44,12 @@ const SOCIAL_LINKS = [
   { href: "#", label: "X", icon: XIcon },
 ];
 
+function handleEmptyLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+  if (event.currentTarget.getAttribute("href") === "#") {
+    event.preventDefault();
+  }
+}
+
 export function Footer() {
   return (
     <footer className="border-t border-zinc-200 bg-white px-4 py-6 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
@@ -74,6 +83,7 @@ export function Footer() {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
+                  onClick={handleEmptyLinkClick}
                   className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:text-white"
                 >
                   <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
