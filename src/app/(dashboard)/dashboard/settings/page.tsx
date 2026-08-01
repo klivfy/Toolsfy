@@ -26,7 +26,15 @@ export default async function SettingsPage({
 
   const isPremium = subscription?.status === "active";
   const fullName = (user?.user_metadata?.full_name as string | undefined) ?? "";
+  const theme = (user?.user_metadata?.theme as string | undefined) ?? "system";
   const initials = getUserInitials(user);
+  const createdAt = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : "—";
 
   return (
     <div className="space-y-8">
@@ -93,6 +101,27 @@ export default async function SettingsPage({
               className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-400"
             />
           </div>
+          <div>
+            <label
+              htmlFor="theme"
+              className="mb-1.5 block text-xs font-medium text-zinc-600"
+            >
+              Preferência de tema
+            </label>
+            <select
+              id="theme"
+              name="theme"
+              defaultValue={theme}
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-950 outline-none focus:border-zinc-400"
+            >
+              <option value="light">Claro</option>
+              <option value="dark">Escuro</option>
+              <option value="system">Automático (sistema)</option>
+            </select>
+          </div>
+          <p className="text-xs text-zinc-400">
+            Conta criada em {createdAt}
+          </p>
           <button
             type="submit"
             className="inline-flex items-center rounded-lg bg-zinc-950 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800"

@@ -1,37 +1,41 @@
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckoutButton } from "@/components/billing/checkout-button";
 import { PortalButton } from "@/components/billing/portal-button";
 
-const PLANS = [
-  {
-    key: "free",
-    name: "Free",
-    price: "R$ 0",
-    period: "/mês",
-    description: "Para começar a explorar o Toolsfy.",
-    features: [
-      "Acesso às ferramentas web nativas",
-      "Até 100 créditos por mês",
-      "Suporte por e-mail",
-    ],
-  },
-  {
-    key: "premium",
-    name: "Premium",
-    price: "R$ 49",
-    period: "/mês",
-    description: "Para quem usa o Toolsfy todos os dias.",
-    features: [
-      "Créditos ilimitados",
-      "Automações avançadas",
-      "Suporte prioritário",
-      "Acesso antecipado a novas ferramentas",
-    ],
-  },
+const PLAN_HEADERS = {
+  free: { name: "Free", price: "R$ 0", period: "/mês" },
+  premium: { name: "Premium", price: "R$ 49", period: "/mês" },
+} as const;
+
+const FEATURES: {
+  label: string;
+  free: boolean | string;
+  premium: boolean | string;
+}[] = [
+  { label: "Ferramentas web nativas", free: true, premium: true },
+  { label: "Créditos mensais", free: "100", premium: "Ilimitados" },
+  { label: "Automações avançadas", free: false, premium: true },
+  { label: "Suporte", free: "E-mail", premium: "Prioritário" },
+  { label: "Acesso antecipado a novas ferramentas", free: false, premium: true },
 ];
+
+function FeatureCell({ value }: { value: boolean | string }) {
+  if (value === true) {
+    return (
+      <Check
+        className="mx-auto h-4 w-4 text-emerald-600"
+        strokeWidth={1.75}
+      />
+    );
+  }
+  if (value === false) {
+    return <Minus className="mx-auto h-4 w-4 text-zinc-300" strokeWidth={1.75} />;
+  }
+  return <span className="text-xs font-medium text-zinc-950">{value}</span>;
+}
 
 export default async function BillingPage() {
   const supabase = await createClient();
@@ -83,67 +87,87 @@ export default async function BillingPage() {
         <h2 className="mb-4 text-sm font-medium text-zinc-500">
           Planos disponíveis
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {PLANS.map((plan) => {
-            const isCurrentPlan = (plan.key === "premium") === isPremium;
-
-            return (
-              <Card
-                key={plan.key}
-                className={`flex flex-col p-6 ${
-                  plan.key === "premium" ? "ring-1 ring-zinc-950/5" : ""
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-zinc-950">
-                    {plan.name}
-                  </h3>
-                  {isCurrentPlan && <Badge tone="success">Seu plano</Badge>}
-                </div>
-                <p className="mt-1 text-xs text-zinc-500">
-                  {plan.description}
-                </p>
-
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-2xl font-semibold text-zinc-950">
-                    {plan.price}
-                  </span>
-                  <span className="text-xs text-zinc-400">{plan.period}</span>
-                </div>
-
-                <ul className="mt-4 flex-1 space-y-2">
-                  {plan.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-2 text-xs text-zinc-600"
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+          <table className="w-full min-w-[520px] border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="w-1/3 border-b border-zinc-200 p-4 text-left align-bottom text-xs font-medium text-zinc-400">
+                  Recursos
+                </th>
+                {(["free", "premium"] as const).map((key) => {
+                  const header = PLAN_HEADERS[key];
+                  const isCurrentPlan = (key === "premium") === isPremium;
+                  return (
+                    <th
+                      key={key}
+                      className="border-b border-l border-zinc-200 p-4 text-left align-bottom"
                     >
-                      <Check
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400"
-                        strokeWidth={1.75}
-                      />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-5">
-                  {plan.key === "premium" ? (
-                    isPremium ? (
-                      subscription?.stripe_customer_id && <PortalButton />
-                    ) : (
-                      priceId && <CheckoutButton priceId={priceId} />
-                    )
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-zinc-950">
+                          {header.name}
+                        </span>
+                        {isCurrentPlan && (
+                          <Badge tone="success">Seu plano</Badge>
+                        )}
+                      </div>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <span className="text-xl font-semibold text-zinc-950">
+                          {header.price}
+                        </span>
+                        <span className="text-xs text-zinc-400">
+                          {header.period}
+                        </span>
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {FEATURES.map((feature) => (
+                <tr key={feature.label}>
+                  <td className="border-b border-zinc-200 p-4 text-xs text-zinc-600">
+                    {feature.label}
+                  </td>
+                  <td className="border-b border-l border-zinc-200 p-4 text-center">
+                    <FeatureCell value={feature.free} />
+                  </td>
+                  <td className="border-b border-l border-zinc-200 p-4 text-center">
+                    <FeatureCell value={feature.premium} />
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td className="p-4" />
+                <td className="border-l border-zinc-200 p-4 text-center">
+                  {!isPremium ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center rounded-lg border border-zinc-200 px-4 py-2 text-xs font-medium text-zinc-400 opacity-60"
+                    >
+                      Plano atual
+                    </button>
                   ) : (
-                    !isPremium && (
-                      <span className="inline-flex items-center rounded-lg border border-zinc-200 px-4 py-2 text-xs font-medium text-zinc-400">
-                        Plano atual
-                      </span>
-                    )
+                    subscription?.stripe_customer_id && <PortalButton />
                   )}
-                </div>
-              </Card>
-            );
-          })}
+                </td>
+                <td className="border-l border-zinc-200 p-4 text-center">
+                  {isPremium ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center rounded-lg border border-zinc-200 px-4 py-2 text-xs font-medium text-zinc-400 opacity-60"
+                    >
+                      Plano atual
+                    </button>
+                  ) : (
+                    priceId && <CheckoutButton priceId={priceId} />
+                  )}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 

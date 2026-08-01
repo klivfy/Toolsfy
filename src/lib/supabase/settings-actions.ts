@@ -3,12 +3,18 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+const THEMES = ["light", "dark", "system"] as const;
+
 export async function updateProfile(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
+  const themeInput = String(formData.get("theme") ?? "system");
+  const theme = THEMES.includes(themeInput as (typeof THEMES)[number])
+    ? themeInput
+    : "system";
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({
-    data: { full_name: fullName },
+    data: { full_name: fullName, theme },
   });
 
   if (error) {
