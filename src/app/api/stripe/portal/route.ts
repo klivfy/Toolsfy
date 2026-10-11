@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getStripe } from "@/lib/stripe/server";
+import { getSiteUrl, getStripe } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(request: Request) {
+export async function POST() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -22,12 +22,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No Stripe customer found" }, { status: 404 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? request.headers.get("origin")!;
+  try {
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: subscription.stripe_customer_id,
+      return_url: `${getSiteUrl()}/dashboard/billing`,
+    });
 
-  const session = await getStripe().billingPortal.sessions.create({
-    customer: subscription.stripe_customer_id,
-    return_url: `${siteUrl}/dashboard/billing`,
-  });
-
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[stripe-portal] session create failed for user ${user.id}: ${message}`);
+    return NextResponse.json({ error: "Portal unavailable" }, { status: 502 });
+  }
 }

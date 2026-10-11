@@ -17,6 +17,11 @@ export function CheckoutButton({ priceId }: { priceId: string }) {
         body: JSON.stringify({ priceId }),
       });
       const data = await res.json();
+      if (res.status === 409) {
+        showToast(data.error ?? "Você já tem uma assinatura ativa", "error");
+        setLoading(false);
+        return;
+      }
       if (!res.ok || !data.url) {
         throw new Error(data.error ?? "Falha ao criar sessão de checkout");
       }
