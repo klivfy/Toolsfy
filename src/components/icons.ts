@@ -12,6 +12,7 @@ import {
   Compass,
   CircleCheck,
   CircleX,
+  ChefHat,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +30,7 @@ export const ICONS = {
   compass: Compass,
   "circle-check": CircleCheck,
   "circle-x": CircleX,
+  "chef-hat": ChefHat,
 } satisfies Record<string, LucideIcon>;
 
 export type IconKey = keyof typeof ICONS;
