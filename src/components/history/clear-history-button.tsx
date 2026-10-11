@@ -18,7 +18,11 @@ export function ClearHistoryButton() {
     if (!confirmed) return;
 
     startTransition(async () => {
-      await clearHistory();
+      const result = await clearHistory();
+      if (!result.ok) {
+        showToast("Não foi possível limpar o histórico", "error");
+        return;
+      }
       showToast("Histórico limpo");
       router.refresh();
     });

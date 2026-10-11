@@ -29,11 +29,12 @@ export async function updateSession(request: NextRequest) {
   );
 
   // IMPORTANT: avoid writing logic between createServerClient and
-  // getUser(). A simple mistake could make it very hard to debug
+  // getClaims(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() refreshes an expired session and verifies the JWT locally
+  // (asymmetric signing keys), so most requests skip the Auth round trip.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const pathname = request.nextUrl.pathname;
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) =>

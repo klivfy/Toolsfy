@@ -10,6 +10,13 @@ export type ToolUsageRow = {
   created_at: string;
 };
 
+/** Row returned by the get_monthly_usage() database function. */
+export type MonthlyUsage = {
+  credits_used: number;
+  executions: number;
+  successes: number;
+};
+
 export const CREDITS_LIMIT_FREE = 100;
 export const CREDITS_LIMIT_PREMIUM = 1000;
 

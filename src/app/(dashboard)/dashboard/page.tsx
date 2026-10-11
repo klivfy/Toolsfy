@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/current-user";
 import { getGreeting } from "@/lib/user-display";
 import { formatRelativeTime } from "@/lib/format-time";
-import { resolveToolIcon, getCreditsLimit, type ToolUsageRow } from "@/lib/tool-usage";
+import {
+  resolveToolIcon,
+  getCreditsLimit,
+  type MonthlyUsage,
+  type ToolUsageRow,
+} from "@/lib/tool-usage";
 import { CreditsUsageBar } from "@/components/dashboard/credits-usage-bar";
 import { TopToolsChart } from "@/components/dashboard/top-tools-chart";
 import { Card } from "@/components/ui/card";
@@ -40,62 +46,48 @@ const QUICK_TOOLS = [
 ];
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([
+    createClient(),
+    getCurrentUser(),
+  ]);
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("status")
-    .eq("user_id", user!.id)
-    .maybeSingle();
+  // Independent queries run in parallel; sums and rankings are computed in
+  // the database (see 0006_tool_usage_aggregates.sql).
+  const [
+    { data: subscription },
+    { data: recentUsage },
+    { data: monthlyUsage },
+    { data: topTools },
+  ] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select("status")
+      .eq("user_id", user!.id)
+      .maybeSingle(),
+    supabase
+      .from("tool_usage")
+      .select("id, tool_id, tool_name, credits, status, created_at")
+      .eq("user_id", user!.id)
+      .is("hidden_at", null)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase.rpc("get_monthly_usage").maybeSingle<MonthlyUsage>(),
+    supabase.rpc("get_top_tools", { p_days: 30, p_limit: 8 }),
+  ]);
 
   const isPremium = subscription?.status === "active";
   const creditsLimit = getCreditsLimit(isPremium);
 
-  const { data: recentUsage } = await supabase
-    .from("tool_usage")
-    .select("id, tool_id, tool_name, credits, status, created_at")
-    .eq("user_id", user!.id)
-    .order("created_at", { ascending: false })
-    .limit(5);
-
   const recentHistory = (recentUsage ?? []) as ToolUsageRow[];
 
-  const startOfMonth = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    1,
-  ).toISOString();
-  const { data: monthlyUsage } = await supabase
-    .from("tool_usage")
-    .select("credits")
-    .eq("user_id", user!.id)
-    .gte("created_at", startOfMonth);
+  const creditsUsed = Number(monthlyUsage?.credits_used ?? 0);
 
-  const creditsUsed = (monthlyUsage ?? []).reduce(
-    (total, row) => total + (row.credits ?? 0),
-    0,
-  );
-
-  const thirtyDaysAgo = new Date(
-    Date.now() - 30 * 24 * 60 * 60 * 1000,
-  ).toISOString();
-  const { data: last30DaysUsage } = await supabase
-    .from("tool_usage")
-    .select("tool_name")
-    .eq("user_id", user!.id)
-    .eq("status", "success")
-    .gte("created_at", thirtyDaysAgo);
-
-  const toolCounts = new Map<string, number>();
-  for (const row of last30DaysUsage ?? []) {
-    toolCounts.set(row.tool_name, (toolCounts.get(row.tool_name) ?? 0) + 1);
-  }
-  const topToolsData = Array.from(toolCounts, ([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
+  const topToolsData = (
+    (topTools ?? []) as { tool_name: string; uses: number }[]
+  ).map((row) => ({
+    name: row.tool_name,
+    count: Number(row.uses),
+  }));
 
   const displayName = user?.email?.split("@")[0] ?? "Usuário";
   const today = new Date().toLocaleDateString("pt-BR", {

@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import {
   DOCUMENT_TYPES,
+  getFieldMaxLength,
   type DocumentType,
   type DocumentGeneratorInput,
 } from "./document-types";
@@ -28,6 +29,13 @@ export function validateDocumentInput(input: unknown): DocumentGeneratorInput {
 
     if (field.required && !stringValue) {
       throw new Error(`O campo "${field.label}" é obrigatório`);
+    }
+
+    const maxLength = getFieldMaxLength(field);
+    if (stringValue.length > maxLength) {
+      throw new Error(
+        `O campo "${field.label}" aceita até ${maxLength} caracteres`,
+      );
     }
 
     normalizedFields[field.key] = stringValue;

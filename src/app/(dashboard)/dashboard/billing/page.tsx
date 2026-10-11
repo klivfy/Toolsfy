@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/current-user";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckoutButton } from "@/components/billing/checkout-button";
@@ -6,10 +7,10 @@ import { PortalButton } from "@/components/billing/portal-button";
 import { PricingTable } from "@/components/billing/pricing-table";
 
 export default async function BillingPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([
+    createClient(),
+    getCurrentUser(),
+  ]);
 
   const { data: subscription } = await supabase
     .from("subscriptions")

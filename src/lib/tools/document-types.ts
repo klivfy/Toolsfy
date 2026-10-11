@@ -1,5 +1,13 @@
 export type DocumentType = "contrato" | "recibo" | "relatorio";
 
+/** Per-field limits; long inputs would turn into thousands of PDF pages. */
+export const FIELD_MAX_LENGTH = 200;
+export const MULTILINE_FIELD_MAX_LENGTH = 5000;
+
+export function getFieldMaxLength(field: { multiline?: boolean }) {
+  return field.multiline ? MULTILINE_FIELD_MAX_LENGTH : FIELD_MAX_LENGTH;
+}
+
 export type DocumentField = {
   key: string;
   label: string;

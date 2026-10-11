@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/current-user";
 import { signOut } from "@/lib/supabase/actions";
 import { getUserInitials } from "@/lib/user-display";
 import { Footer } from "@/components/footer";
@@ -27,10 +27,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   // Middleware already guards this route group; this is a defense-in-depth
   // check for direct server-side renders.

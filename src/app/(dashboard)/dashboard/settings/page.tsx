@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/current-user";
 import { getUserInitials } from "@/lib/user-display";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +15,10 @@ export default async function SettingsPage({
 }) {
   const { error, message } = await searchParams;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([
+    createClient(),
+    getCurrentUser(),
+  ]);
 
   const { data: subscription } = await supabase
     .from("subscriptions")
@@ -83,6 +84,7 @@ export default async function SettingsPage({
               name="fullName"
               type="text"
               defaultValue={fullName}
+              maxLength={80}
               placeholder="Seu nome completo"
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-950 outline-none focus:border-zinc-400"
             />
