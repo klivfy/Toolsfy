@@ -28,6 +28,7 @@ export default async function HistoryPage({
       count: "exact",
     })
     .eq("user_id", user!.id)
+    .is("hidden_at", null)
     .order("created_at", { ascending: false })
     .range(0, limit - 1);
 

@@ -58,6 +58,7 @@ export default async function DashboardPage() {
     .from("tool_usage")
     .select("id, tool_id, tool_name, credits, status, created_at")
     .eq("user_id", user!.id)
+    .is("hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(5);
 

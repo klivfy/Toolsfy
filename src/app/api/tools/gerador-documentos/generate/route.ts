@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { APPS } from "@/components/showcase/data";
+import { getCreditsLimit } from "@/lib/tool-usage";
+import {
+  chargeCredits,
+  INSUFFICIENT_CREDITS_MESSAGE,
+  refundUsage,
+} from "@/lib/credits";
 import {
   generateDocumentPdf,
   validateDocumentInput,
 } from "@/lib/tools/document-generator";
+
+const TOOL_ID = "gerador-documentos";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -15,6 +24,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const app = APPS.find((item) => item.id === TOOL_ID);
+  if (!app) {
+    return NextResponse.json({ error: "Tool not found" }, { status: 404 });
+  }
+
   let input;
   try {
     const body = await request.json();
@@ -24,7 +38,50 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const pdfBytes = await generateDocumentPdf(input);
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  let usageId: string;
+  try {
+    const charge = await chargeCredits({
+      userId: user.id,
+      toolId: app.id,
+      toolName: app.name,
+      cost: app.credits,
+      limit: getCreditsLimit(subscription?.status === "active"),
+    });
+    if (!charge.ok) {
+      return NextResponse.json(
+        { error: INSUFFICIENT_CREDITS_MESSAGE },
+        { status: 402 },
+      );
+    }
+    usageId = charge.usageId;
+  } catch (err) {
+    console.error(`[gerador-documentos] charge failed for user ${user.id}:`, err);
+    return NextResponse.json(
+      { error: "Não foi possível gerar o documento" },
+      { status: 500 },
+    );
+  }
+
+  let pdfBytes: Uint8Array;
+  try {
+    pdfBytes = await generateDocumentPdf(input);
+  } catch (err) {
+    await refundUsage(usageId);
+    console.warn(`[gerador-documentos] generation failed for user ${user.id}:`, err);
+    return NextResponse.json(
+      {
+        error:
+          "Não foi possível gerar o PDF. Remova emojis ou símbolos especiais e tente novamente.",
+      },
+      { status: 422 },
+    );
+  }
 
   return new NextResponse(Buffer.from(pdfBytes), {
     status: 200,
