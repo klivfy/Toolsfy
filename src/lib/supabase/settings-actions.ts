@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 const THEMES = ["light", "dark", "system"] as const;
+// The name goes into user_metadata, which travels in the JWT cookie.
+const FULL_NAME_MAX_LENGTH = 80;
 
 export async function updateProfile(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
@@ -11,6 +13,12 @@ export async function updateProfile(formData: FormData) {
   const theme = THEMES.includes(themeInput as (typeof THEMES)[number])
     ? themeInput
     : "system";
+
+  if (fullName.length > FULL_NAME_MAX_LENGTH) {
+    redirect(
+      `/dashboard/settings?error=${encodeURIComponent(`O nome deve ter no máximo ${FULL_NAME_MAX_LENGTH} caracteres`)}`,
+    );
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({

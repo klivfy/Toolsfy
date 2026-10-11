@@ -13,6 +13,7 @@ import {
 } from "@/lib/tools/document-generator";
 
 const TOOL_ID = "gerador-documentos";
+const MAX_BODY_BYTES = 64 * 1024;
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -29,10 +30,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Tool not found" }, { status: 404 });
   }
 
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (declaredLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Requisição muito grande" }, { status: 413 });
+  }
+
   let input;
   try {
-    const body = await request.json();
-    input = validateDocumentInput(body);
+    // Content-Length can be absent (chunked), so measure the body too.
+    const raw = await request.text();
+    if (Buffer.byteLength(raw) > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Requisição muito grande" }, { status: 413 });
+    }
+    input = validateDocumentInput(JSON.parse(raw));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Requisição inválida";
     return NextResponse.json({ error: message }, { status: 400 });

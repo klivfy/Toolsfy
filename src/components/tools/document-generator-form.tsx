@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Loader2, Download } from "lucide-react";
 import { useToast } from "@/components/toast/toast-provider";
-import { DOCUMENT_TYPES, type DocumentType } from "@/lib/tools/document-types";
+import {
+  DOCUMENT_TYPES,
+  getFieldMaxLength,
+  type DocumentType,
+} from "@/lib/tools/document-types";
 
 export function DocumentGeneratorForm() {
   const [docType, setDocType] = useState<DocumentType>(DOCUMENT_TYPES[0].key);
@@ -90,6 +94,7 @@ export function DocumentGeneratorForm() {
               onChange={(event) => handleFieldChange(field.key, event.target.value)}
               rows={3}
               required={field.required}
+              maxLength={getFieldMaxLength(field)}
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-950 outline-none focus:border-zinc-400"
             />
           ) : (
@@ -99,6 +104,7 @@ export function DocumentGeneratorForm() {
               value={values[field.key] ?? ""}
               onChange={(event) => handleFieldChange(field.key, event.target.value)}
               required={field.required}
+              maxLength={getFieldMaxLength(field)}
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-950 outline-none focus:border-zinc-400"
             />
           )}
