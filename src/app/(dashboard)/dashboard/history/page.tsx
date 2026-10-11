@@ -4,8 +4,13 @@ import { Card } from "@/components/ui/card";
 import { HistoryList } from "@/components/history/history-list";
 import { ClearHistoryButton } from "@/components/history/clear-history-button";
 import { type HistoryEntry } from "@/components/history/types";
-import { resolveToolIcon, type ToolUsageRow } from "@/lib/tool-usage";
+import {
+  resolveToolIcon,
+  type MonthlyUsage,
+  type ToolUsageRow,
+} from "@/lib/tool-usage";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/current-user";
 
 const PAGE_SIZE = 10;
 
@@ -17,55 +22,43 @@ export default async function HistoryPage({
   const { limit: limitParam } = await searchParams;
   const limit = Math.max(PAGE_SIZE, Number(limitParam) || PAGE_SIZE);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([
+    createClient(),
+    getCurrentUser(),
+  ]);
 
-  const { data: rows, count } = await supabase
-    .from("tool_usage")
-    .select("id, tool_id, tool_name, credits, status, created_at", {
-      count: "exact",
-    })
-    .eq("user_id", user!.id)
-    .is("hidden_at", null)
-    .order("created_at", { ascending: false })
-    .range(0, limit - 1);
+  // One extra row tells whether there is a next page without a count(*).
+  const [{ data: rows }, { data: monthly }] = await Promise.all([
+    supabase
+      .from("tool_usage")
+      .select("id, tool_id, tool_name, credits, status, created_at")
+      .eq("user_id", user!.id)
+      .is("hidden_at", null)
+      .order("created_at", { ascending: false })
+      .range(0, limit),
+    supabase.rpc("get_monthly_usage").maybeSingle<MonthlyUsage>(),
+  ]);
 
-  const usage = (rows ?? []) as ToolUsageRow[];
-  const totalCount = count ?? usage.length;
-  const hasMore = totalCount > usage.length;
+  const usage = ((rows ?? []) as ToolUsageRow[]).slice(0, limit);
+  const hasMore = (rows?.length ?? 0) > limit;
 
-  const startOfMonth = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    1,
-  ).toISOString();
-  const { data: monthlyRows } = await supabase
-    .from("tool_usage")
-    .select("credits, status")
-    .eq("user_id", user!.id)
-    .gte("created_at", startOfMonth);
-
-  const monthly = monthlyRows ?? [];
-  const successCount = monthly.filter((row) => row.status === "success").length;
+  const executions = Number(monthly?.executions ?? 0);
+  const successCount = Number(monthly?.successes ?? 0);
 
   const STATS = [
     {
       label: "Execuções este mês",
-      value: String(monthly.length),
+      value: String(executions),
     },
     {
       label: "Créditos consumidos",
-      value: String(
-        monthly.reduce((total, row) => total + (row.credits ?? 0), 0),
-      ),
+      value: String(Number(monthly?.credits_used ?? 0)),
     },
     {
       label: "Taxa de sucesso",
       value:
-        monthly.length > 0
-          ? `${Math.round((successCount / monthly.length) * 100)}%`
+        executions > 0
+          ? `${Math.round((successCount / executions) * 100)}%`
           : "—",
     },
   ];

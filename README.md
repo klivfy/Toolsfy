@@ -23,7 +23,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 - `src/app/api/stripe` — checkout, billing portal, and webhook route handlers
 - `src/lib/supabase` — browser/server Supabase clients, middleware session helper, and auth server actions
 - `src/lib/stripe` — server-side Stripe client
-- `middleware.ts` — refreshes the Supabase session and redirects unauthenticated users away from `/dashboard`
+- `src/proxy.ts` — refreshes the Supabase session on `/dashboard`, `/login` and `/signup` and redirects unauthenticated users away from `/dashboard` (it must sit next to `src/app`, or Next.js ignores it)
 - `supabase/migrations` — SQL migrations, starting with a `subscriptions` table used by the Stripe webhook
 
 ## Environment variables

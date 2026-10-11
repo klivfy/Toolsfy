@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/current-user";
 import { HeroBanner } from "@/components/showcase/hero-banner";
 import { AppGrid } from "@/components/showcase/app-grid";
 import { StoreLinks } from "@/components/showcase/store-links";
@@ -7,10 +8,10 @@ import { APPS, STORES } from "@/components/showcase/data";
 export default async function ToolsPage() {
   const featuredApp = APPS[0];
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([
+    createClient(),
+    getCurrentUser(),
+  ]);
   const { data: subscription } = await supabase
     .from("subscriptions")
     .select("status")
