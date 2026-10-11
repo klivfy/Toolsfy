@@ -46,6 +46,18 @@ export const APPS: AppItem[] = [
     credits: 20,
   },
   {
+    id: "chefs-measure",
+    name: "Chef's Measure",
+    description:
+      "Converta medidas, precifique receitas e controle a despensa, mesmo offline.",
+    icon: "chef-hat",
+    category: "web",
+    native: false,
+    compatibility: ["web"],
+    href: "https://chefs.toolsfy.com.br",
+    credits: 0,
+  },
+  {
     id: "toolsfy-navegadores",
     name: "Toolsfy para Navegadores",
     description: "Acesse ferramentas rápidas direto da barra do navegador.",
