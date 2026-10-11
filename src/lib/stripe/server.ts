@@ -11,6 +11,10 @@ export function getStripe(): Stripe {
     stripeClient = new Stripe(secretKey, {
       apiVersion: "2026-07-29.dahlia",
       typescript: true,
+      // Fail fast instead of holding the function until the platform kills
+      // it; the SDK retries with backoff and reuses idempotency keys.
+      timeout: 10_000,
+      maxNetworkRetries: 2,
     });
   }
   return stripeClient;

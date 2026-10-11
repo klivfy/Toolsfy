@@ -3,20 +3,152 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-async function resolveUserId(
-  supabase: ReturnType<typeof createAdminClient>,
-  customerId: string,
-  subscriptionMetadataUserId?: string | null,
-) {
-  if (subscriptionMetadataUserId) return subscriptionMetadataUserId;
+type AdminClient = ReturnType<typeof createAdminClient>;
 
-  const { data } = await supabase
+/** Thrown on any database failure so the route answers 500 and Stripe retries. */
+class WebhookDbError extends Error {}
+
+function idOf(value: string | { id: string } | null | undefined) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value.id;
+}
+
+async function resolveUserId(
+  supabase: AdminClient,
+  customerId: string | null,
+  metadataUserId?: string | null,
+) {
+  if (metadataUserId) return metadataUserId;
+  if (!customerId) return null;
+
+  const { data, error } = await supabase
     .from("subscriptions")
     .select("user_id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
 
-  return data?.user_id ?? null;
+  if (error) throw new WebhookDbError(`lookup by customer failed: ${error.message}`);
+  return (data?.user_id as string | undefined) ?? null;
+}
+
+async function applySubscriptionEvent(
+  supabase: AdminClient,
+  event: Stripe.Event,
+  values: {
+    userId: string;
+    customerId: string | null;
+    subscriptionId: string | null;
+    status: string | null;
+  },
+) {
+  const { data: applied, error } = await supabase.rpc("apply_stripe_subscription_event", {
+    p_user_id: values.userId,
+    p_customer_id: values.customerId,
+    p_subscription_id: values.subscriptionId,
+    p_status: values.status,
+    p_event_created: new Date(event.created * 1000).toISOString(),
+  });
+
+  if (error) throw new WebhookDbError(`apply event failed: ${error.message}`);
+
+  console.log(
+    applied
+      ? `[stripe-webhook] ${event.type} (${event.id}) applied for user ${values.userId}, status ${values.status ?? "unchanged"}`
+      : `[stripe-webhook] ${event.type} (${event.id}) skipped: a newer event was already applied for user ${values.userId}`,
+  );
+}
+
+async function handleCheckoutSession(
+  supabase: AdminClient,
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+) {
+  const userId = session.metadata?.supabase_user_id ?? session.client_reference_id;
+
+  if (!userId) {
+    console.warn(`[stripe-webhook] ${event.type} (${event.id}) without a resolvable user_id`);
+    return;
+  }
+
+  // Asynchronous methods (e.g. boleto) complete the session before the
+  // money arrives: store the ids, activate only once it is paid.
+  const isPaid = session.payment_status === "paid";
+
+  await applySubscriptionEvent(supabase, event, {
+    userId,
+    customerId: idOf(session.customer),
+    subscriptionId: idOf(session.subscription),
+    status: isPaid ? "active" : null,
+  });
+}
+
+async function processEvent(supabase: AdminClient, event: Stripe.Event) {
+  switch (event.type) {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded": {
+      await handleCheckoutSession(supabase, event, event.data.object);
+      break;
+    }
+
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object;
+      const customerId = idOf(invoice.customer);
+      const details = invoice.parent?.subscription_details;
+      const userId = await resolveUserId(
+        supabase,
+        customerId,
+        details?.metadata?.supabase_user_id ?? null,
+      );
+
+      if (!userId) {
+        console.warn(
+          `[stripe-webhook] invoice.payment_succeeded (${event.id}) for unresolved customer ${customerId}`,
+        );
+        break;
+      }
+
+      await applySubscriptionEvent(supabase, event, {
+        userId,
+        customerId,
+        subscriptionId: idOf(details?.subscription),
+        status: "active",
+      });
+      break;
+    }
+
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object;
+      const customerId = idOf(subscription.customer);
+      // Metadata set at checkout lets this work even when it arrives before
+      // checkout.session.completed.
+      const userId = await resolveUserId(
+        supabase,
+        customerId,
+        subscription.metadata?.supabase_user_id ?? null,
+      );
+
+      if (!userId) {
+        console.warn(
+          `[stripe-webhook] ${event.type} (${event.id}) for unresolved customer ${customerId}`,
+        );
+        break;
+      }
+
+      await applySubscriptionEvent(supabase, event, {
+        userId,
+        customerId,
+        subscriptionId: subscription.id,
+        status: subscription.status,
+      });
+      break;
+    }
+
+    default:
+      console.log(`[stripe-webhook] unhandled event type ${event.type} (${event.id})`);
+      break;
+  }
 }
 
 export async function POST(request: Request) {
@@ -37,75 +169,40 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.warn(`[stripe-webhook] signature verification failed: ${message}`);
-    return NextResponse.json({ error: `Invalid signature: ${message}` }, { status: 400 });
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   console.log(`[stripe-webhook] received event ${event.type} (${event.id})`);
 
   const supabase = createAdminClient();
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.supabase_user_id ?? session.client_reference_id;
+  try {
+    const { data: seen, error: seenError } = await supabase
+      .from("stripe_events")
+      .select("id")
+      .eq("id", event.id)
+      .maybeSingle();
 
-      if (userId) {
-        await supabase.from("subscriptions").upsert({
-          user_id: userId,
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          status: "active",
-        });
-        console.log(`[stripe-webhook] checkout completed for user ${userId}`);
-      } else {
-        console.warn("[stripe-webhook] checkout.session.completed without a resolvable user_id");
-      }
-      break;
+    if (seenError) throw new WebhookDbError(`event lookup failed: ${seenError.message}`);
+
+    if (seen) {
+      console.log(`[stripe-webhook] event ${event.id} already processed, skipping`);
+      return NextResponse.json({ received: true, duplicate: true });
     }
 
-    case "invoice.payment_succeeded": {
-      const invoice = event.data.object as Stripe.Invoice;
-      const customerId = invoice.customer as string;
-      const subscriptionId =
-        typeof invoice.parent?.subscription_details?.subscription === "string"
-          ? invoice.parent.subscription_details.subscription
-          : (invoice.parent?.subscription_details?.subscription?.id ?? null);
-      const subscriptionMetadataUserId =
-        invoice.parent?.subscription_details?.metadata?.supabase_user_id ?? null;
+    await processEvent(supabase, event);
 
-      const userId = await resolveUserId(supabase, customerId, subscriptionMetadataUserId);
+    // Recorded only after a successful apply, so a failed attempt is
+    // retried by Stripe instead of being marked as done.
+    const { error: recordError } = await supabase
+      .from("stripe_events")
+      .upsert({ id: event.id, type: event.type }, { onConflict: "id", ignoreDuplicates: true });
 
-      if (userId) {
-        await supabase.from("subscriptions").upsert({
-          user_id: userId,
-          stripe_customer_id: customerId,
-          ...(subscriptionId ? { stripe_subscription_id: subscriptionId } : {}),
-          status: "active",
-        });
-        console.log(`[stripe-webhook] payment succeeded, plan set to premium for user ${userId}`);
-      } else {
-        console.warn(`[stripe-webhook] invoice.payment_succeeded for unresolved customer ${customerId}`);
-      }
-      break;
-    }
-
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted": {
-      const subscription = event.data.object as Stripe.Subscription;
-
-      await supabase
-        .from("subscriptions")
-        .update({ status: subscription.status })
-        .eq("stripe_subscription_id", subscription.id);
-      console.log(
-        `[stripe-webhook] subscription ${subscription.id} status set to ${subscription.status}`,
-      );
-      break;
-    }
-
-    default:
-      console.log(`[stripe-webhook] unhandled event type ${event.type}`);
-      break;
+    if (recordError) throw new WebhookDbError(`event record failed: ${recordError.message}`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[stripe-webhook] ${event.type} (${event.id}) failed: ${message}`);
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

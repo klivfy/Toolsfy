@@ -38,3 +38,7 @@ See `.env.example` for the full list. You'll need:
 ```bash
 stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
+
+The webhook handles `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+`invoice.payment_succeeded` and `customer.subscription.created|updated|deleted`; enable these
+events on the endpoint in the Stripe Dashboard.
